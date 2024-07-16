@@ -16,7 +16,7 @@ class UploadScreen extends StatefulWidget {
 }
 
 class _UploadScreenState extends State<UploadScreen> {
-  final randomVar = 0;
+  final randomVar = 1;
   File? _selectedImage;
   bool detecting = false;
   String diseaseName = '';
