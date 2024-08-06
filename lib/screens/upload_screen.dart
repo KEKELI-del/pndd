@@ -151,7 +151,7 @@ class _UploadScreenState extends State<UploadScreen> {
           _selectedImage == null
               ? SizedBox(
                   height: MediaQuery.of(context).size.height * 0.5,
-                  child: Image.asset('assets/wallpaper.jpg'),
+                  child: Image.asset(''),
                 )
               : Expanded(
                   child: Container(
