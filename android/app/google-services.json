@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "82491676354",
+    "project_id": "pndd-b6f85",
+    "storage_bucket": "pndd-b6f85.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:82491676354:android:e48e6f7c0607a914a74d5b",
+        "android_client_info": {
+          "package_name": "com.company.pndd"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8WJQfLHTG_NP3Gs60TKfGbLckF6ADyW0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:82491676354:android:55274341d6f65357a74d5b",
+        "android_client_info": {
+          "package_name": "com.pndd.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8WJQfLHTG_NP3Gs60TKfGbLckF6ADyW0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,17 +1,97 @@
+// ignore_for_file: unused_import
 
-mport 'package:flutter/material.dart';
-import 'package:pndd/screens/signup_screen.dart';
-import 'package:pndd/services/auth_service.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'upload_screen.dart';
 
-
-
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final ImagePicker _picker = ImagePicker();
+  File? _image;
+  final bool _isLoading = false;
+  final String _result = '';
+
+  Future<void> _showPicker(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext bc) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () {
+                  _imgFromGallery();
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Camera'),
+                onTap: () {
+                  _imgFromCamera();
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  _imgFromCamera() async {
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 50,
+    );
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+        _navigateToUploadScreen();
+      }
+    });
+  }
+
+  _imgFromGallery() async {
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50,
+    );
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+        _navigateToUploadScreen();
+      }
+    });
+  }
+
+  void _navigateToUploadScreen() {
+    if (_image != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UploadScreen(image: _image!),
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Color primaryColor = Colors.green.shade700; // Use the same primary color as SignUpScreen
+    final primaryColor = Theme.of(context).primaryColor;
 
     return Scaffold(
       appBar: AppBar(
@@ -58,7 +138,7 @@ class HomeScreen extends StatelessWidget {
                       color: primaryColor,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      fontStyle: FontStyle.italic
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
                 ),
@@ -83,7 +163,7 @@ class HomeScreen extends StatelessWidget {
                   HomeScreenButton(
                     title: 'Upload Image',
                     onPressed: () {
-                      Navigator.pushNamed(context, '/upload');
+                      _showPicker(context);
                     },
                     color: primaryColor,
                   ),
@@ -95,6 +175,20 @@ class HomeScreen extends StatelessWidget {
                     },
                     color: primaryColor,
                   ),
+                  const SizedBox(height: 10),
+                  _isLoading
+                      ? CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(primaryColor),
+                        )
+                      : Text(
+                          _result, // Display the result from the model
+                          style: TextStyle(
+                            color: primaryColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                   const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -137,7 +231,8 @@ class HomeScreenButton extends StatelessWidget {
   final VoidCallback onPressed;
   final Color color;
 
-  const HomeScreenButton({super.key, 
+  const HomeScreenButton({
+    super.key,
     required this.title,
     required this.onPressed,
     required this.color,
@@ -171,7 +266,8 @@ class HomeScreenIconButton extends StatelessWidget {
   final VoidCallback onPressed;
   final Color color;
 
-  const HomeScreenIconButton({super.key, 
+  const HomeScreenIconButton({
+    super.key,
     required this.icon,
     required this.onPressed,
     required this.color,

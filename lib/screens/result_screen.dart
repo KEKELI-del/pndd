@@ -1,96 +1,120 @@
+// ignore_for_file: unused_element, unused_local_variabimport 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 
 class ResultsScreen extends StatelessWidget {
-  final String plantName;
   final String diseaseName;
-  final String description;
 
-  ResultsScreen({
-    required this.plantName,
-    required this.diseaseName,
-    required this.description,
-  });
+  const ResultsScreen({super.key, required this.diseaseName});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Detection Results'),
+        title: const Text('Detection Results'),
         backgroundColor: Colors.green.shade700,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Plant: $plantName',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.green.shade700,
+      body: Column(
+        children: <Widget>[
+          const SizedBox(height: 20),
+          Container(
+            height: MediaQuery.of(context).size.height * 0.23,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(50.0),
               ),
+              color: Colors.green.shade700,
             ),
-            SizedBox(height: 20),
-            Text(
-              'Detected Disease:',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+          ),
+          Container(
+            height: MediaQuery.of(context).size.height * 0.2,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(50.0),
               ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              diseaseName,
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.black87,
-              ),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Description:',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              description,
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.black87,
-              ),
-            ),
-            SizedBox(height: 30),
-            Container(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade700,
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 5,
+                  offset: const Offset(2, 2),
                 ),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text(
-                  'BACK',
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                Text(
+                  'Detection Results',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
+                    color: Colors.green.shade700,
                   ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Detected Disease:',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    diseaseName.trim(),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.redAccent,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'BACK',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 30),
+        ],
       ),
     );
   }

@@ -1,10 +1,7 @@
-
- // ignore_for_file: library_private_types_in_public_api, prefer_const_constructors, prefer_typing_uninitialized_variables, unused_import, unused_field
+// ignore_for_file: library_private_types_in_public_api, prefer_const_constructors, prefer_typing_uninitialized_variables, unused_import, unused_field
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
-import 'auth_service.dart'; // Make sure to  have the correct import for your AuthService
-
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,10 +14,43 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _isLoading = false;
-@override
+
+  Future<void> login() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final authProvider = Provider.of<AuthService>(context, listen: false);
+      authProvider.login(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+
+      if (mounted) {
+        Navigator.pushNamed(context, "/login");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString(),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     Color primaryColor = Colors.green.shade700;
-
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -63,7 +93,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor.withOpacity(0.5)),
+                        borderSide:
+                            BorderSide(color: primaryColor.withOpacity(0.5)),
                       ),
                     ),
                   ),
@@ -77,7 +108,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor.withOpacity(0.5)),
+                        borderSide:
+                            BorderSide(color: primaryColor.withOpacity(0.5)),
                       ),
                     ),
                     obscureText: true,
@@ -86,24 +118,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   Center(
                     child: _isLoading
                         ? CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(primaryColor),
                           )
                         : ElevatedButton(
-                            onPressed: () async {
-                              setState(() {
-                                _isLoading = true;
-                              });
-                              // Simulate login logic
-                              await Future.delayed(Duration(seconds: 2));
-                              setState(() {
-                                _isLoading = false;
-                              });
-                              // Navigate to home screen on success
-                              Navigator.pushReplacementNamed(context, '/home');
-                            },
+                            onPressed: login,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryColor,
-                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 30, vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15),
                               ),
@@ -118,6 +141,23 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                   ),
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Not having an account? "),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, "/signup");
+                        },
+                        child: Text(
+                          "Register",
+                          style:
+                              TextStyle(color: Theme.of(context).primaryColor),
+                        ),
+                      )
+                    ],
+                  )
                 ],
               ),
             ),
@@ -127,4 +167,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
- 

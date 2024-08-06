@@ -1,21 +1,38 @@
-// screens/upload_screen.dart
-// ignore_for_file: prefer_const_constructors, non_constant_identifier_names, depend_on_referenced_packages, library_private_types_in_public_api, unused_local_variable, avoid_print, prefer_typing_uninitialized_variables, unnecessary_null_comparison, unused_field, unused_import, duplicate_import
+// ignore_for_file: avoid_print
+
 import 'dart:io';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
+import 'package:pndd/global_methods.dart';
+// import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
+import 'package:pndd/screens/result_screen.dart';
 
 class UploadScreen extends StatefulWidget {
+  final File? image;
+
+  const UploadScreen({super.key, required this.image});
+
   @override
   _UploadScreenState createState() => _UploadScreenState();
 }
 
 class _UploadScreenState extends State<UploadScreen> {
   File? _selectedImage;
-  bool detecting = false;
-  String diseaseName = '';
+  bool _isLoading = false;
+  final storage = FirebaseStorage.instance;
+  final currentFarmer = FirebaseAuth.instance.currentUser;
 
-  Future<void> _pickImage(ImageSource source) async {
+  @override
+  void initState() {
+    super.initState();
+    _selectedImage = widget.image;
+  }
+
+  Future<void> pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source);
 
@@ -23,201 +40,214 @@ class _UploadScreenState extends State<UploadScreen> {
       if (pickedFile != null) {
         _selectedImage = File(pickedFile.path);
       } else {
-        print('No image selected.');
+        if (mounted) {
+          showSnackBar(context, "Choose an image file");
+        }
       }
     });
   }
 
-  Future<void> detectDisease() async {
+  Future<void> uploadImage() async {
     if (_selectedImage == null) return;
+    final imageFileName = path.basename(_selectedImage!.path);
 
     setState(() {
-      detecting = true;
+      _isLoading = true;
     });
+    try {
+      // create reference for path to storage location for image
+      final storageRef = storage
+          .ref()
+          .child("leaves_to_analyze/${currentFarmer!.email}/$imageFileName");
 
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('http://192.168.1.10/upload'), // backend URL
-    );
-    request.files.add(await http.MultipartFile.fromPath('file', _selectedImage!.path));
-    var response = await request.send();
+      // upload to firebase storage
+      storageRef.putFile(_selectedImage!);
 
-    if (response.statusCode == 200) {
-      var responseData = await http.Response.fromStream(response);
-      setState(() {
-        diseaseName = responseData.body; // Assuming the response body contains the disease name
-        detecting = false;
-      });
-    } else {
-      print('Detection failed');
-      setState(() {
-        detecting = false;
-      });
+      if (mounted) {
+        // show success message
+        showSnackBar(context, "Image uploaded successfully!");
+
+        // navigate to results page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ResultsScreen(diseaseName: "kooko"),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Upload Image'),
-        backgroundColor: Colors.green.shade700,
+        automaticallyImplyLeading: false,
+        title: const Text("Plant Nutrient Deficiency Detector"),
+        backgroundColor: primaryColor,
       ),
-      body: Column(
-        children: <Widget>[
-          SizedBox(height: 20),
-          Stack(
-            children: [
-              Container(
-                height: MediaQuery.of(context).size.height * 0.23,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(50.0),
-                  ),
-                  color: Colors.green.shade700, // Example primary color from design
-                ),
-              ),
-              Container(
-                height: MediaQuery.of(context).size.height * 0.2,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(50.0),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 5,
-                      offset: Offset(2, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    ElevatedButton(
-                      onPressed: () {
-                        _pickImage(ImageSource.gallery);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade700, // Example button color from design
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'OPEN GALLERY',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          SizedBox(width: 10),
-                          Icon(
-                            Icons.image,
-                            color: Colors.white,
-                          )
-                        ],
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        _pickImage(ImageSource.camera);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade700,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'START CAMERA',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          SizedBox(width: 10),
-                          Icon(
-                            Icons.camera_alt,
-                            color: Colors.white,
-                          )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          _selectedImage == null
-              ? SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.5,
-                  child: Image.asset(''),
-                )
-              : Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
-                    padding: EdgeInsets.all(20),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.file(
-                        _selectedImage!,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-          if (_selectedImage != null)
-            detecting
-                ? CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green.shade700), // Example theme color
-                  )
-                : Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade700, // Example theme color
-                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      onPressed: detectDisease,
-                      child: Text(
-                        'DETECT',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-          if (diseaseName.isNotEmpty)
-            Column(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Stack(
               children: [
                 Container(
+                  height: MediaQuery.of(context).size.height * 0.23,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(50.0),
+                    ),
+                    color: primaryColor,
+                  ),
+                ),
+                Container(
                   height: MediaQuery.of(context).size.height * 0.2,
-                  padding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        diseaseName.trim(),
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(50.0),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 5,
+                        offset: const Offset(2, 2),
                       ),
                     ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Upload Image',
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
-          SizedBox(height: 30),
-        ],
+            const SizedBox(height: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_selectedImage != null) Image.file(_selectedImage!),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => pickImage(ImageSource.gallery),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    child: const Text(
+                      'Pick Image from Gallery',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () => pickImage(ImageSource.camera),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    child: const Text(
+                      'Take a Photo',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  if (_selectedImage != null && !_isLoading)
+                    HomeScreenButton(
+                      title: 'Upload Image',
+                      onPressed: uploadImage,
+                      color: primaryColor,
+                    ),
+                  if (_isLoading)
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class HomeScreenButton extends StatelessWidget {
+  final String title;
+  final VoidCallback onPressed;
+  final Color color;
+
+  const HomeScreenButton({
+    super.key,
+    required this.title,
+    required this.onPressed,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+      ),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
